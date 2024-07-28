@@ -1,0 +1,4 @@
+name: CounterStrike
+version: '1.0-SNAPSHOT'
+main: io.github.miaow233.counterstrike.CounterStrike
+api-version: '1.20'
