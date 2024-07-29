@@ -67,7 +67,7 @@ public class RoundManager {
     }
 
     public void stopRounds() {
-        if (roundTask != null && !roundTask.isCancelled()) {
+        if (instance != null && roundTask != null && !roundTask.isCancelled()) {
             roundTask.cancel();
         }
     }
