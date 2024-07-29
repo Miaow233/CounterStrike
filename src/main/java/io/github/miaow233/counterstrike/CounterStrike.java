@@ -1,10 +1,8 @@
 package io.github.miaow233.counterstrike;
 
-import io.github.miaow233.counterstrike.commands.JoinCommand;
-import io.github.miaow233.counterstrike.commands.SetLobbyCommand;
-import io.github.miaow233.counterstrike.commands.SetTeamSpawnCommand;
+import io.github.miaow233.counterstrike.commands.CounterStrikeCommand;
+import io.github.miaow233.counterstrike.listeners.FlashingListener;
 import io.github.miaow233.counterstrike.listeners.PlayerListener;
-import io.github.miaow233.counterstrike.listeners.PlayerViewListener;
 import io.github.miaow233.counterstrike.managers.EconomyManager;
 import io.github.miaow233.counterstrike.managers.GameManager;
 import io.github.miaow233.counterstrike.managers.PlayerManager;
@@ -14,18 +12,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class CounterStrike extends JavaPlugin {
 
+    public static CounterStrike instance;
 
     @Override
     public void onEnable() {
+
+        instance = this;
+
         // Register commands
-        this.getCommand("setlobby").setExecutor(new SetLobbyCommand(this));
-        this.getCommand("setteamspawn").setExecutor(new SetTeamSpawnCommand(this));
-        this.getCommand("join").setExecutor(new JoinCommand(this));
+        this.getCommand("csmc").setExecutor(new CounterStrikeCommand(this));
 
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
-        getServer().getPluginManager().registerEvents(new PlayerViewListener(), this);
+        getServer().getPluginManager().registerEvents(new FlashingListener(this), this);
+
 
         // Initialize managers
         GameManager.initialize(this);
@@ -37,6 +38,10 @@ public final class CounterStrike extends JavaPlugin {
     public void onDisable() {
         // Cleanup logic if necessary
 
-        RoundManager.getInstance().stopRounds();
+        try {
+            RoundManager.getInstance().stopRounds();
+        } catch (Exception e) {
+            this.getLogger().warning("Failed to stop rounds: " + e.getMessage());
+        }
     }
 }
