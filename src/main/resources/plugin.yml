@@ -3,14 +3,15 @@ version: '1.0-SNAPSHOT'
 main: io.github.miaow233.counterstrike.CounterStrike
 api-version: '1.20'
 commands:
-  setlobby:
-    description: 'Set lobby'
-    usage: /setlobby
-    permission: counterstrike.setlobby
-  setteamspawn:
-    description: 'Set team spawn'
-    usage: '/setteamspawn <team>'
-    permission: counterstrike.setteamspawn
-  join:
-    description: 'Join the game'
-    usage: /join
+  'csmc admin':
+    description: 'Open the admin menu'
+    aliases:
+      - 'csmc admin'
+    permission: csmc.admin
+
+  'csmc':
+    usage: '/csmc'
+    description: 'Open the main menu'
+    aliases:
+      - 'cs'
+    permission: csmc
