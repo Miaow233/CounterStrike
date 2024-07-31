@@ -1,7 +1,9 @@
 package io.github.miaow233.counterstrike.managers;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import io.github.miaow233.counterstrike.MapConfig;
 import io.github.miaow233.counterstrike.models.Team;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 public class GameManager {
@@ -24,12 +26,31 @@ public class GameManager {
     }
 
     public void startGame() {
-        RoundManager.initialize(plugin, 180, 10); // Example: each round is 180 seconds, 10 rounds total
-        // Prepare the game
+        // 13 回合，每回合 2 分钟
+        RoundManager.initialize(plugin, 120, 13);
+
+        MapConfig selectedMap = plugin.getMapManager().getSelectedMap();
+        if (selectedMap == null) {
+            plugin.getLogger().warning("未选择地图，将使用默认地图");
+            selectedMap = plugin.getMapManager().getMaps().get("de_dust2");
+        }
+
+        Location tSpawn = selectedMap.getTSpawn();
+        Location ctSpawn = selectedMap.getCTSpawn();
+
         PlayerManager.getInstance().getPlayers().forEach((player, gamePlayer) -> {
-            Location spawnLocation = getSpawnLocationForTeam(gamePlayer.getTeam());
-            player.teleport(spawnLocation);
+            if (gamePlayer.getTeam() == Team.TERRORISTS) {
+                player.teleport(tSpawn);
+                plugin.getLogger().info("已将 " + player.getName() + " 传送至terrorists 队伍");
+            } else {
+                player.teleport(ctSpawn);
+                plugin.getLogger().info("已将 " + player.getName() + " 传送至counter-terrorists 队伍");
+            }
         });
+
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud hostile COUNTER_TERRORISTS TERRORISTS");
+
         RoundManager.getInstance().startRounds();
     }
 
@@ -46,3 +67,4 @@ public class GameManager {
         }
     }
 }
+

@@ -1,5 +1,6 @@
 package io.github.miaow233.counterstrike.models;
 
+import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.managers.EconomyManager;
 import org.bukkit.entity.Player;
 
@@ -41,6 +42,8 @@ public class GamePlayer {
 
     public void setTeam(Team team) {
         this.team = team;
+        CounterStrike.instance.getLogger().info("玩家 " + player.getName() + " 已被设置为 " + team.name() + " 阵营");
+        CounterStrike.instance.getTeamManager().addPlayerToTeam(player.getName(), team.name());
     }
 
     public int getKills() {

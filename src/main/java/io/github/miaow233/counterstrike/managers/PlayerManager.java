@@ -35,6 +35,15 @@ public class PlayerManager {
         assignTeam(gamePlayer);
     }
 
+    public void addPlayer(Player player, Team team) {
+        GamePlayer gamePlayer = new GamePlayer(player);
+
+        // TODO: 检查阵营是否已满员
+
+        gamePlayer.setTeam(team);
+        players.put(player, gamePlayer);
+    }
+
     public void removePlayer(Player player) {
         players.remove(player);
     }
@@ -58,5 +67,14 @@ public class PlayerManager {
 
     public Map<Player, GamePlayer> getPlayers() {
         return players;
+    }
+
+    public void resetPlayerStats() {
+        players.forEach((player, gamePlayer) -> {
+            gamePlayer.setKills(0);
+            gamePlayer.setDeaths(0);
+
+            EconomyManager.getInstance().updatePlayerCoins(player, 0);
+        });
     }
 }
