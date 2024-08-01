@@ -1,28 +1,17 @@
 package io.github.miaow233.counterstrike;
 
 import org.bukkit.Location;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
-import org.bukkit.configuration.serialization.SerializableAs;
 
-import java.util.HashMap;
-import java.util.Map;
 
-@SerializableAs("MapConfig")
-public class MapConfig implements ConfigurationSerializable {
+public class MapConfig {
     private final String name;
     private Location tSpawn;
     private Location ctSpawn;
 
-    public MapConfig(String name) {
+    public MapConfig(String name, Location tSpawn, Location ctSpawn) {
         this.name = name;
-    }
-
-    public static MapConfig deserialize(Map<String, Object> map) {
-        String name = (String) map.get("name");
-        MapConfig mapConfig = new MapConfig(name);
-        mapConfig.setTSpawn((Location) map.get("tSpawn"));
-        mapConfig.setCTSpawn((Location) map.get("ctSpawn"));
-        return mapConfig;
+        this.tSpawn = tSpawn;
+        this.ctSpawn = ctSpawn;
     }
 
     public String getName() {
@@ -33,24 +22,15 @@ public class MapConfig implements ConfigurationSerializable {
         return tSpawn;
     }
 
-    public void setTSpawn(Location tSpawn) {
-        this.tSpawn = tSpawn;
-    }
-
     public Location getCTSpawn() {
         return ctSpawn;
     }
 
-    public void setCTSpawn(Location ctSpawn) {
-        this.ctSpawn = ctSpawn;
+    public void setTSpawn(Location location) {
+        this.tSpawn = location;
     }
 
-    @Override
-    public Map<String, Object> serialize() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", name);
-        map.put("tSpawn", tSpawn);
-        map.put("ctSpawn", ctSpawn);
-        return map;
+    public void setCTSpawn(Location location) {
+        this.ctSpawn = location;
     }
 }

@@ -3,6 +3,7 @@ package io.github.miaow233.counterstrike.managers;
 import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.models.GamePlayer;
 import io.github.miaow233.counterstrike.models.Team;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -39,7 +40,6 @@ public class PlayerManager {
         GamePlayer gamePlayer = new GamePlayer(player);
 
         // TODO: 检查阵营是否已满员
-
         gamePlayer.setTeam(team);
         players.put(player, gamePlayer);
     }
@@ -58,15 +58,33 @@ public class PlayerManager {
 
         if (terroristCount <= counterTerroristCount) {
             gamePlayer.setTeam(Team.TERRORISTS);
-            gamePlayer.getPlayer().sendMessage("You have been assigned to the Terrorists team.");
+            gamePlayer.getPlayer().sendMessage("你已被分配为T阵营");
         } else {
             gamePlayer.setTeam(Team.COUNTER_TERRORISTS);
-            gamePlayer.getPlayer().sendMessage("You have been assigned to the Counter-Terrorists team.");
+            gamePlayer.getPlayer().sendMessage("你已被分配为CT阵营");
         }
     }
 
+
     public Map<Player, GamePlayer> getPlayers() {
         return players;
+    }
+
+    public Map<Team, Integer> getTeamCount() {
+        Map<Team, Integer> teamCount = new HashMap<>();
+        teamCount.put(Team.TERRORISTS, (int) players.values().stream().filter(p -> p.getTeam() == Team.TERRORISTS).count());
+        teamCount.put(Team.COUNTER_TERRORISTS, (int) players.values().stream().filter(p -> p.getTeam() == Team.COUNTER_TERRORISTS).count());
+        return teamCount;
+    }
+
+    public int getAliveCount(Team team) {
+
+        int getAliveCount = (int) players.values().stream()
+                .filter(p -> p.getTeam() == team)
+                .filter(p -> p.getPlayer().getGameMode() != GameMode.SPECTATOR)
+                .count();
+        plugin.getLogger().warning("队伍 %s 剩余 %d 人".formatted(team.name(), getAliveCount));
+        return getAliveCount;
     }
 
     public void resetPlayerStats() {
@@ -75,6 +93,18 @@ public class PlayerManager {
             gamePlayer.setDeaths(0);
 
             EconomyManager.getInstance().updatePlayerCoins(player, 0);
+        });
+    }
+
+    public void boardcast(String message) {
+        players.forEach((player, gamePlayer) -> player.sendMessage(message));
+    }
+
+    public void boardcast(String message, Team team) {
+        players.forEach((player, gamePlayer) -> {
+            if (gamePlayer.getTeam() == team) {
+                player.sendMessage(message);
+            }
         });
     }
 }

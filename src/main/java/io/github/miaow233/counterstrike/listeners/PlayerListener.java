@@ -4,11 +4,13 @@ package io.github.miaow233.counterstrike.listeners;
 import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.GameState;
 import io.github.miaow233.counterstrike.managers.PlayerManager;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -23,16 +25,24 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        // Handle player join logic
-
         if (plugin.getMapManager() == null) {
             plugin.setup();
         }
+
+        // 清除玩家队伍
+        Player player = event.getPlayer();
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/team leave " + player.getName());
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        // Handle player quit logic
+
+        // 清除玩家队伍
+        Player player = event.getPlayer();
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/team leave " + player.getName());
+
+        PlayerManager.getInstance().removePlayer(player);
+
     }
 
     // 在无敌时间内阻止攻击
@@ -52,9 +62,7 @@ public class PlayerListener implements Listener {
 
         Player player = chatEvent.getPlayer();
 
-
         // 如果玩家没有进行游戏
-
         if (PlayerManager.getInstance().getGamePlayer(player) == null) {
             return;
         }
@@ -65,5 +73,15 @@ public class PlayerListener implements Listener {
             // chat.setMessage("");
             chatEvent.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        Player player = (Player) event.getEntity();
+        // 如果玩家没有进行游戏
+        if (PlayerManager.getInstance().getGamePlayer(player) == null) {
+            return;
+        }
+        event.setCancelled(true);
     }
 }

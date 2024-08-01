@@ -1,23 +1,31 @@
-package io.github.miaow233.counterstrike.managers;
+package io.github.miaow233.counterstrike;
 
-import io.github.miaow233.counterstrike.MapConfig;
 import org.bukkit.Location;
 import org.bukkit.configuration.MemorySection;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapManager {
+public class TestConfig {
 
-    private final Map<String, MapConfig> maps = new HashMap<>();
-    private MapConfig selectedMap;
-    private final ConfigManager configManager;
+    Map<String, MapConfig> maps = new HashMap<>();
+    MapConfig selectedMap;
 
-    public MapManager(File dataFolder) {
-        configManager = new ConfigManager(new File(dataFolder, "maps.yml"));
-        loadMaps();
+    ConfigManager configManager;
+
+    public TestConfig() throws IOException {
+        configManager = new ConfigManager("config.yml");
     }
+
+    public static void main(String[] args) throws IOException {
+        TestConfig instance = new TestConfig();
+        instance.loadMaps();
+        instance.createMap("de_dust2");
+        instance.createMap("dust_2");
+        instance.saveMaps();
+    }
+
     public void createMap(String name) {
         if (maps.containsKey(name)) {
             return;
@@ -77,5 +85,29 @@ public class MapManager {
 
     public Map<String, MapConfig> getMaps() {
         return maps;
+    }
+
+    public static class MapConfig {
+        private final String name;
+        private final Location tSpawn;
+        private final Location ctSpawn;
+
+        public MapConfig(String name, Location tSpawn, Location ctSpawn) {
+            this.name = name;
+            this.tSpawn = tSpawn;
+            this.ctSpawn = ctSpawn;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Location getTSpawn() {
+            return tSpawn;
+        }
+
+        public Location getCTSpawn() {
+            return ctSpawn;
+        }
     }
 }

@@ -1,0 +1,41 @@
+##############################################
+# Counter Strike - CS:GO                     #
+# Made by Danablend, barpec12 and tontito007 #
+##############################################
+# Whether the plugin will start games or not.
+enabled: true
+# Whether the plugin should send debug messages to console or not.
+debug: false
+# The minimum amount of players needed to start a game.
+min-players: 4
+# The maximum amount of players allowed into a game.
+max-players: 12
+# The amount of rounds team should won to win the whole game.
+rounds-to-win: 16
+# The amount of maximum rounds in a single game.
+max-rounds: 30
+# The money that each player will get when the first round starts.
+starting-money: 800
+# The money that each player on the winning team will get after a victory.
+money-on-win-reward: 3000
+# The money that each player on the losing team will get after a loss.
+money-on-loss-reward: 2000
+# The block material you can plant the bomb on.
+bomb-block: OBSIDIAN
+# The amount of seconds it should take for the bomb to explode.
+bomb-timer: 45
+# The amount of seconds players have, to buy items from the shop in start of each round.
+shop-phase-duration: 15
+# The amount of seconds every round will take (Counter Terrorists win if this timer runs out, and the bomb stops the timer if planted).
+match-duration: 120
+# The level of speed effect applied to player when holding a knife
+knife-speed: 2
+# If true, this will allow team mates to shoot each other with their weapons.
+friendly-fire-enabled: false
+# If true, this will shake the screen whenever a player shoots.
+recoil-animation-enabled: true
+# Configuration for weapons:
+# Damage is how many half-hearts each shot will do (So setting it to 2, will make it do 1 full heart of damage).
+# Cost is how much money the weapon will cost to be purchased.
+# Ammunition is how many bullets a weapon can shoot before having to reload.
+# Reloadspeed is the time it takes to reload the weapon. (So for example 2.5 would be 2s and 500ms reload time)

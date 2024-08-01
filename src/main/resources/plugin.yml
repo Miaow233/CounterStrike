@@ -4,15 +4,16 @@ main: io.github.miaow233.counterstrike.CounterStrike
 api-version: '1.20'
 load: POSTWORLD
 commands:
-  'csmc admin':
-    description: 'Open the admin menu'
-    aliases:
-      - 'csmc admin'
+  'csmc coin':
     permission: csmc.admin
-
+  'csmc map':
+    permission: csmc.admin
+  'csmc join':
+    permission: csmc.join
+  'csmc end':
+    permission: csmc.leave
   'csmc':
     usage: '/csmc'
-    description: 'Open the main menu'
     aliases:
       - 'cs'
     permission: csmc

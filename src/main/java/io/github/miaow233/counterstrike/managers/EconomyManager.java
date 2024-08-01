@@ -2,6 +2,9 @@ package io.github.miaow233.counterstrike.managers;
 
 import io.github.miaow233.counterstrike.CounterStrike;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Criteria;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,9 +15,25 @@ public class EconomyManager {
     private final CounterStrike plugin;
     private final Map<Player, Integer> playerCoins;
 
+    private final ScoreboardManager scoreboardManager;
+
+    private Objective objective;
+
     private EconomyManager(CounterStrike plugin) {
         this.plugin = plugin;
         this.playerCoins = new HashMap<>();
+
+        // 使用计分板管理玩家金币
+        scoreboardManager = plugin.getServer().getScoreboardManager();
+
+        //scoreboardManager.getMainScoreboard().getObjective("lrhud.score").unregister();
+
+        objective = scoreboardManager.getMainScoreboard().getObjective("lrhud.score");
+
+        if (objective == null) {
+            // 注册计分板
+            objective = scoreboardManager.getMainScoreboard().registerNewObjective("lrhud.score", Criteria.DUMMY, "金币");
+        }
     }
 
     public static void initialize(CounterStrike plugin) {
@@ -30,12 +49,14 @@ public class EconomyManager {
     public void addCoins(Player player, int amount) {
         int currentCoins = playerCoins.getOrDefault(player, 0);
         playerCoins.put(player, currentCoins + amount);
+        objective.getScore(player.getName()).setScore(currentCoins + amount);
         updatePlayerCoins(player, currentCoins + amount);
     }
 
     public void removeCoins(Player player, int amount) {
         int currentCoins = playerCoins.getOrDefault(player, 0);
         playerCoins.put(player, currentCoins - amount);
+        objective.getScore(player.getName()).setScore(currentCoins - amount);
         updatePlayerCoins(player, currentCoins - amount);
     }
 
@@ -45,6 +66,6 @@ public class EconomyManager {
 
     public void updatePlayerCoins(Player player, int newAmount) {
         playerCoins.put(player, newAmount);
-        // 这里可以添加更多的全局逻辑，比如更新数据库或通知其他系统
+        objective.getScore(player.getName()).setScore(newAmount);
     }
 }

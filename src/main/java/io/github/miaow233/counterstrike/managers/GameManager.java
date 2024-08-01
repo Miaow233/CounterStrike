@@ -32,7 +32,7 @@ public class GameManager {
         MapConfig selectedMap = plugin.getMapManager().getSelectedMap();
         if (selectedMap == null) {
             plugin.getLogger().warning("未选择地图，将使用默认地图");
-            selectedMap = plugin.getMapManager().getMaps().get("de_dust2");
+            selectedMap = plugin.getMapManager().getMaps().get("nuke");
         }
 
         Location tSpawn = selectedMap.getTSpawn();
@@ -46,6 +46,8 @@ public class GameManager {
                 player.teleport(ctSpawn);
                 plugin.getLogger().info("已将 " + player.getName() + " 传送至counter-terrorists 队伍");
             }
+
+            player.getInventory().clear();
         });
 
 
@@ -57,14 +59,6 @@ public class GameManager {
     public void endGame() {
         RoundManager.getInstance().stopRounds();
         // Additional logic to end the game
-    }
-
-    private Location getSpawnLocationForTeam(Team team) {
-        if (team == Team.TERRORISTS) {
-            return (Location) plugin.getConfig().get("teams.TERRORISTS.spawn");
-        } else {
-            return (Location) plugin.getConfig().get("teams.COUNTER_TERRORISTS.spawn");
-        }
     }
 }
 

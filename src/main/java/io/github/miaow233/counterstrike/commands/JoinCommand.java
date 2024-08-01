@@ -1,6 +1,7 @@
 package io.github.miaow233.counterstrike.commands;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import io.github.miaow233.counterstrike.managers.EconomyManager;
 import io.github.miaow233.counterstrike.managers.PlayerManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -25,6 +26,8 @@ public class JoinCommand implements CommandExecutor {
 
         PlayerManager.getInstance().addPlayer(player);
         player.sendMessage("You joined the game!");
+
+        EconomyManager.getInstance().updatePlayerCoins(player, 0);
 
         // 如果房间已满，则开始游戏
         //if (GameManager.getInstance().isFull()){

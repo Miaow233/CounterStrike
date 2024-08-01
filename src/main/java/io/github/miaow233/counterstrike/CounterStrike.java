@@ -3,7 +3,6 @@ package io.github.miaow233.counterstrike;
 import io.github.miaow233.counterstrike.commands.CounterStrikeCommand;
 import io.github.miaow233.counterstrike.listeners.*;
 import io.github.miaow233.counterstrike.managers.*;
-import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -22,10 +21,6 @@ public final class CounterStrike extends JavaPlugin {
 
         instance = this;
         teamManager = new TeamManager(this);
-
-        // 注册MapConfig类
-        ConfigurationSerialization.registerClass(MapConfig.class, "MapConfig");
-
 
         // Register commands
         this.getCommand("csmc").setExecutor(new CounterStrikeCommand(this));

@@ -32,8 +32,6 @@ public class PacketUtils {
      */
 
     public static void sendTitleAndSubtitleToInGame(String titleText, String subtitleText, int fadeInDuration, int duration, int fadeOutDuration) {
-
-
         for (Player player : PlayerManager.getInstance().getPlayers().keySet()) {
             sendTitleAndSubtitle(player, titleText, subtitleText, fadeInDuration, duration, fadeOutDuration);
         }

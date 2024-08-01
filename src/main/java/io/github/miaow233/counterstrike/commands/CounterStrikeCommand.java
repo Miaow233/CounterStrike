@@ -4,6 +4,10 @@ import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.items.Flashing;
 import io.github.miaow233.counterstrike.items.SmokeGrenade;
 import io.github.miaow233.counterstrike.managers.GameManager;
+import io.github.miaow233.counterstrike.managers.PlayerManager;
+import io.github.miaow233.counterstrike.utils.PacketUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -11,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CounterStrikeCommand implements CommandExecutor {
 
@@ -25,11 +30,6 @@ public class CounterStrikeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can execute this command.");
-            return false;
-        }
-
         // 没有参数，显示帮助信息
         // <prefix>
         if (args.length == 0) {
@@ -41,6 +41,55 @@ public class CounterStrikeCommand implements CommandExecutor {
 
         registerHandler("join", new JoinCommand(plugin));
         registerHandler("map", new MapCommand(plugin));
+        registerHandler("coin", new CoinCommand(plugin));
+
+
+        // <prefix> start
+        if (action.equalsIgnoreCase("start")) {
+
+            if (plugin.getMapManager().getSelectedMap() == null) {
+                sender.sendMessage("没有选择地图");
+                return false;
+            }
+
+            sender.sendMessage("开始游戏");
+
+            AtomicInteger remainingTime = new AtomicInteger(5);
+
+            // 5s 后开始游戏
+            int timerId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+                PacketUtils.sendTitleAndSubtitleToInGame("游戏即将开始", ChatColor.RED + String.valueOf(remainingTime.getAndDecrement()), 0, 1, 0);
+            }, 0, 20);
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                Bukkit.getScheduler().cancelTask(timerId);
+                GameManager.getInstance().startGame();
+            }, 20 * 5);
+
+            return true;
+        }
+
+        // <prefix> end
+        if (action.equalsIgnoreCase("end")) {
+            sender.sendMessage("结束游戏");
+            GameManager.getInstance().endGame();
+            return true;
+        }
+
+        if (handlers.containsKey(action)) {
+            return handle(action, sender, command, label, args);
+        }
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Only players can execute this command.");
+            return false;
+        }
+
+        // <prefix> exit
+        if (action.equalsIgnoreCase("exit")) {
+            player.sendMessage("退出游戏");
+            PlayerManager.getInstance().removePlayer(player);
+        }
 
         // FlashingCommand
         if (action.equalsIgnoreCase("flashing")) {
@@ -54,23 +103,7 @@ public class CounterStrikeCommand implements CommandExecutor {
             return true;
         }
 
-        // <prefix> start
-        if (action.equalsIgnoreCase("start")) {
-            player.sendMessage("开始游戏");
-            GameManager.getInstance().startGame();
-            return true;
-        }
-
-        // <prefix> exit
-        if (action.equalsIgnoreCase("exit")) {
-
-        }
-
-        if (handlers.containsKey(action)) {
-            return handle(action, sender, command, label, args);
-        }
-
-        player.sendMessage("Unknown command.");
+        sender.sendMessage("Unknown command.");
         return false;
     }
 

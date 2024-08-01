@@ -6,5 +6,5 @@ public enum GameState {
     STARTING,
     SHOP,
     RUN,
-    PLANTED
+    ROUND_END, IN_GAME, PLANTED
 }
