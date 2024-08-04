@@ -1,10 +1,11 @@
 package io.github.miaow233.counterstrike.managers;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Criteria;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,25 +16,27 @@ public class EconomyManager {
     private final CounterStrike plugin;
     private final Map<Player, Integer> playerCoins;
 
-    private final ScoreboardManager scoreboardManager;
-
-    private Objective objective;
+    Economy vaultEconomy;
 
     private EconomyManager(CounterStrike plugin) {
         this.plugin = plugin;
         this.playerCoins = new HashMap<>();
 
-        // 使用计分板管理玩家金币
-        scoreboardManager = plugin.getServer().getScoreboardManager();
-
-        //scoreboardManager.getMainScoreboard().getObjective("lrhud.score").unregister();
-
-        objective = scoreboardManager.getMainScoreboard().getObjective("lrhud.score");
-
-        if (objective == null) {
-            // 注册计分板
-            objective = scoreboardManager.getMainScoreboard().registerNewObjective("lrhud.score", Criteria.DUMMY, "金币");
+        if (!setupEconomy()) {
+            plugin.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", plugin.getDescription().getName()));
+            plugin.getServer().getPluginManager().disablePlugin(plugin);
         }
+    }
+
+    private boolean setupEconomy() {
+        if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) {
+            plugin.getLogger().severe("Vault is not installed!");
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = plugin.getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) return false;
+        vaultEconomy = rsp.getProvider();
+        return vaultEconomy != null;
     }
 
     public static void initialize(CounterStrike plugin) {
@@ -48,16 +51,33 @@ public class EconomyManager {
 
     public void addCoins(Player player, int amount) {
         int currentCoins = playerCoins.getOrDefault(player, 0);
-        playerCoins.put(player, currentCoins + amount);
-        objective.getScore(player.getName()).setScore(currentCoins + amount);
-        updatePlayerCoins(player, currentCoins + amount);
+        EconomyResponse response = vaultEconomy.depositPlayer(player, amount);
+        if (!response.transactionSuccess()) {
+            player.sendMessage("§cFailed to add coins. Reason: " + response.errorMessage);
+            return;
+        }
+        int newAmount = currentCoins + amount;
+        updatePlayerCoins(player, newAmount);
     }
 
     public void removeCoins(Player player, int amount) {
         int currentCoins = playerCoins.getOrDefault(player, 0);
-        playerCoins.put(player, currentCoins - amount);
-        objective.getScore(player.getName()).setScore(currentCoins - amount);
-        updatePlayerCoins(player, currentCoins - amount);
+        EconomyResponse response = vaultEconomy.withdrawPlayer(player, amount);
+        if (!response.transactionSuccess()) {
+            player.sendMessage("§cFailed to remove coins. Reason: " + response.errorMessage);
+            return;
+        }
+        int newAmount = currentCoins - amount;
+        updatePlayerCoins(player, newAmount);
+    }
+
+    public void setCoins(Player player, int amount) {
+        int currentCoins = playerCoins.getOrDefault(player, 0);
+        if (currentCoins < amount) {
+            addCoins(player, amount - currentCoins);
+        } else if (currentCoins > amount) {
+            removeCoins(player, currentCoins - amount);
+        }
     }
 
     public int getCoins(Player player) {
@@ -66,6 +86,6 @@ public class EconomyManager {
 
     public void updatePlayerCoins(Player player, int newAmount) {
         playerCoins.put(player, newAmount);
-        objective.getScore(player.getName()).setScore(newAmount);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud coin set %s %d".formatted(player.getName(), newAmount));
     }
 }
