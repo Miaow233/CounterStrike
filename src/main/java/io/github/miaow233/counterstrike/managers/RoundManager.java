@@ -51,22 +51,28 @@ public class RoundManager {
 
     private void startRound() {
 
+        //
+        if (roundTask != null && !roundTask.isCancelled()) roundTask.cancel();
+
         if (currentRound > rounds) {
             stopRounds();
             return;
         }
-
-        PacketUtils.sendTitleAndSubtitleToInGame("第 %s 回合".formatted(ChatColor.RED.toString() + currentRound), "", 1, 3, 1);
 
         for (Player player : PlayerManager.getInstance().getPlayers().keySet()) {
             respawnPlayer(player);
             EconomyManager.getInstance().addCoins(player, 500);
         }
 
+        PacketUtils.sendTitleAndSubtitleToInGame("第 %s %s回合".formatted(ChatColor.RED.toString() + currentRound, ChatColor.RESET), "", 1, 3, 1);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            PacketUtils.sendTitleAndSubtitleToInGame("你有" + ChatColor.YELLOW + "20" + ChatColor.RESET + "秒时间来购买物资", "", 1, 3, 0);
+        }, 5 * 20L);
+
+
+        plugin.setGameState(GameState.SHOP);
 
         plugin.setGameState(GameState.IN_GAME);
-        // 开始新回合的逻辑
-        // 重置玩家状态等
 
         startTimer();
 
@@ -77,15 +83,14 @@ public class RoundManager {
             }
         };
 
-        roundTask.runTaskLater(plugin, roundTime * 20L); // Convert seconds to ticks (20 ticks = 1 second)
+        roundTask.runTaskLater(plugin, roundTime * 20L);
     }
 
     private void startTimer() {
-
         AtomicInteger remainTime = new AtomicInteger(roundTime);
-        // 设置计时器
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud countdown set @a 120 false");
-
+        if (Bukkit.getScheduler().isCurrentlyRunning(timerId)) {
+            Bukkit.getScheduler().cancelTask(timerId);
+        }
         // 计时器每秒减一
         timerId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
             boolean blink = remainTime.get() <= 30;
@@ -97,9 +102,12 @@ public class RoundManager {
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud countdown set @a 0 true");
         Bukkit.getScheduler().cancelTask(timerId);
 
-        Bukkit.broadcastMessage(String.format("第 %d 回合结束，5秒后开始下一回合", currentRound));
+        Player mvpPlayer = PlayerManager.getInstance().getMvp();
+        if (mvpPlayer != null) {
+            PacketUtils.sendTitleAndSubtitleToInGame("MVP", mvpPlayer.getName(), 0, 3, 0);
+        }
 
-        plugin.setGameState(GameState.ROUND_END);
+        Bukkit.broadcastMessage(String.format("第 %d 回合结束，5秒后开始下一回合", currentRound));
 
         currentRound++;
 
@@ -111,10 +119,12 @@ public class RoundManager {
         Bukkit.getScheduler().runTaskLater(plugin, this::startRound, 5 * 20L);
     }
 
-    private void respawnPlayer(Player player) {
-
-        player.setFoodLevel(6);
-        //player.getInventory().clear();
+    // 复位玩家
+    public void respawnPlayer(Player player) {
+        player.setFoodLevel(8);
+        double maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+        plugin.getLogger().info("设置玩家 " + player.getName() + " 的生命值为 " + maxHealth);
+        player.setHealth(maxHealth);
         // 速度效果
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
         player.setGameMode(GameMode.ADVENTURE);
@@ -123,7 +133,6 @@ public class RoundManager {
         player.teleport(location);
         player.setInvulnerable(true);
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.setInvulnerable(false), 5 * 20L); // 5秒无敌时间
-
 
         ItemStack boots = new ItemStack(Material.NETHERITE_BOOTS);
         boots.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
@@ -139,18 +148,21 @@ public class RoundManager {
     }
 
     public void stopRounds() {
+        PacketUtils.sendTitleAndSubtitleToInGame("游戏结束", "", 1, 3, 1);
         // 清除玩家效果
         for (Player player : PlayerManager.getInstance().getPlayers().keySet()) {
             player.getInventory().clear();
             player.setGameMode(GameMode.ADVENTURE);
-            player.setHealth(Attribute.GENERIC_MAX_HEALTH.ordinal());
+            player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
             player.removePotionEffect(PotionEffectType.SPEED);
         }
 
         Bukkit.getScheduler().cancelTask(timerId);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud countdown set @a 0 false");
 
         if (instance != null && roundTask != null && !roundTask.isCancelled()) {
             roundTask.cancel();
+            roundTask = null;
         }
     }
 }

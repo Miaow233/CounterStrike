@@ -1,13 +1,18 @@
 package io.github.miaow233.counterstrike;
 
 import io.github.miaow233.counterstrike.commands.CounterStrikeCommand;
-import io.github.miaow233.counterstrike.listeners.*;
+import io.github.miaow233.counterstrike.listeners.PlayerDeathListener;
+import io.github.miaow233.counterstrike.listeners.PlayerListener;
 import io.github.miaow233.counterstrike.managers.*;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.annotation.dependency.Dependency;
+import org.bukkit.scoreboard.Objective;
 
 import java.io.File;
 
 
+@Dependency("Vault")
 public final class CounterStrike extends JavaPlugin {
 
     public static CounterStrike instance;
@@ -27,11 +32,8 @@ public final class CounterStrike extends JavaPlugin {
 
 
         // Register listeners
-        getServer().getPluginManager().registerEvents(new CustomProjectileListener(this), this);
-        getServer().getPluginManager().registerEvents(new FlashingListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
-        getServer().getPluginManager().registerEvents(new SmokeGrenadeListeners(this), this);
 
         // Initialize managers
         GameManager.initialize(this);
@@ -48,6 +50,11 @@ public final class CounterStrike extends JavaPlugin {
         } catch (Exception e) {
             this.getLogger().warning("Failed to stop rounds: " + e.getMessage());
         }
+
+        teamManager.deleteTeam("TERRORISTS");
+        teamManager.deleteTeam("COUNTER_TERRORISTS");
+
+        this.getServer().getScoreboardManager().getMainScoreboard().getObjectives().forEach(Objective::unregister);
     }
 
     public void setup() {
@@ -57,6 +64,7 @@ public final class CounterStrike extends JavaPlugin {
         }
 
         this.mapManager = new MapManager(dataFolder);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud hostile set COUNTER_TERRORISTS TERRORISTS");
     }
 
     public MapManager getMapManager() {

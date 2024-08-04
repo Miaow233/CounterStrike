@@ -1,8 +1,7 @@
 package io.github.miaow233.counterstrike.commands;
 
 import io.github.miaow233.counterstrike.CounterStrike;
-import io.github.miaow233.counterstrike.items.Flashing;
-import io.github.miaow233.counterstrike.items.SmokeGrenade;
+import io.github.miaow233.counterstrike.GameState;
 import io.github.miaow233.counterstrike.managers.GameManager;
 import io.github.miaow233.counterstrike.managers.PlayerManager;
 import io.github.miaow233.counterstrike.utils.PacketUtils;
@@ -47,12 +46,15 @@ public class CounterStrikeCommand implements CommandExecutor {
         // <prefix> start
         if (action.equalsIgnoreCase("start")) {
 
-            if (plugin.getMapManager().getSelectedMap() == null) {
-                sender.sendMessage("没有选择地图");
-                return false;
+            if (plugin.getGameState() == GameState.IN_GAME) {
+                sender.sendMessage(ChatColor.RED + "游戏已经开始");
+                return true;
             }
 
-            sender.sendMessage("开始游戏");
+            if (plugin.getMapManager().getSelectedMap() == null) {
+                sender.sendMessage(ChatColor.RED + "请先选择地图");
+                return true;
+            }
 
             AtomicInteger remainingTime = new AtomicInteger(5);
 
@@ -66,11 +68,17 @@ public class CounterStrikeCommand implements CommandExecutor {
                 GameManager.getInstance().startGame();
             }, 20 * 5);
 
+            plugin.setGameState(GameState.IN_GAME);
+
             return true;
         }
 
         // <prefix> end
         if (action.equalsIgnoreCase("end")) {
+            if (CounterStrike.instance.getGameState() != GameState.IN_GAME) {
+                sender.sendMessage(ChatColor.RED + "游戏尚未开始");
+                return true;
+            }
             sender.sendMessage("结束游戏");
             GameManager.getInstance().endGame();
             return true;
@@ -89,17 +97,6 @@ public class CounterStrikeCommand implements CommandExecutor {
         if (action.equalsIgnoreCase("exit")) {
             player.sendMessage("退出游戏");
             PlayerManager.getInstance().removePlayer(player);
-        }
-
-        // FlashingCommand
-        if (action.equalsIgnoreCase("flashing")) {
-            player.getInventory().addItem(new Flashing());
-            return true;
-        }
-
-        // SmokeGrenadeCommand
-        if (action.equalsIgnoreCase("smokegrenade")) {
-            player.getInventory().addItem(new SmokeGrenade());
             return true;
         }
 

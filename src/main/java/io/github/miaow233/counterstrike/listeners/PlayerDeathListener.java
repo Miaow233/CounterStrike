@@ -1,19 +1,22 @@
 package io.github.miaow233.counterstrike.listeners;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import io.github.miaow233.counterstrike.GameState;
 import io.github.miaow233.counterstrike.managers.PlayerManager;
 import io.github.miaow233.counterstrike.managers.RoundManager;
 import io.github.miaow233.counterstrike.models.GamePlayer;
 import io.github.miaow233.counterstrike.models.Team;
 import io.github.miaow233.counterstrike.utils.PacketUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Objective;
 
 import java.util.Map;
 
@@ -27,31 +30,23 @@ public class PlayerDeathListener implements Listener {
 
     }
 
-
     @EventHandler
-    public void onPlayerDamage(EntityDamageEvent event) {
+    private void onPlayerDeath(PlayerDeathEvent event) {
+        Player victim = event.getEntity();
 
-        // 是否是游戏中玩家
-        if (!(event.getEntity() instanceof Player victim)) {
-            return;
+        // 将非游戏玩家传送到主世界避免出现问题
+        if (CounterStrike.instance.getGameState() != GameState.IN_GAME) {
+            victim.teleport(Bukkit.getServer().getWorld("world").getSpawnLocation());
         }
 
         GamePlayer gamePlayerVictim = PlayerManager.getInstance().getGamePlayer(victim);
 
-        if (gamePlayerVictim == null) {
-            return;
-        }
+        // 是否是对局内玩家
+        if (gamePlayerVictim == null) return;
 
-        // 当前生命值
-        double health = victim.getHealth();
+        // 防止因双方同时死亡重复判定
+        if (plugin.getGameState() == GameState.ROUND_END) return;
 
-        // 如果此次攻击不能使玩家死亡
-        if (health > event.getFinalDamage()) {
-            return;
-        }
-
-        // 玩家被击杀
-        event.setCancelled(true);
 
         String deadPlayerName = (gamePlayerVictim.getTeam().equals(Team.COUNTER_TERRORISTS)) ? ChatColor.BLUE + victim.getName() : ChatColor.RED + victim.getName();
         victim.setHealth(victim.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
@@ -61,26 +56,26 @@ public class PlayerDeathListener implements Listener {
         Team victimTeam = gamePlayerVictim.getTeam();
 
         if (PlayerManager.getInstance().getAliveCount(victimTeam) < 1) {
-            // 通知所有玩家
-
             String winnerTeam = (victimTeam.equals(Team.COUNTER_TERRORISTS)) ? ChatColor.RED + "T" : ChatColor.BLUE + "CT";
             PacketUtils.sendTitleAndSubtitleToInGame(winnerTeam + ChatColor.WHITE + "阵营获胜", "", 1, 4, 1);
 
-            // 结束回合
+            Objective objective = plugin.getServer().getScoreboardManager().getMainScoreboard().getObjective("csmc.teamWins");
+
+            int score = objective.getScore(winnerTeam).getScore();
+            objective.getScore(winnerTeam).setScore(score + 1);
+            plugin.setGameState(GameState.ROUND_END);
+
+            // 5秒后结束回合
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     RoundManager.getInstance().endRound(true);
                 }
             }.runTaskLaterAsynchronously(plugin, 5 * 20);
-
             return;
         }
 
-
-        victim.sendMessage(ChatColor.RED + "Wait until next round for a respawn.");
         PacketUtils.sendTitleAndSubtitle(victim, ChatColor.RED + "你死了", ChatColor.YELLOW + "下一回合重生", 0, 3, 1);
-
 
         try {
             // 击杀者
@@ -94,7 +89,6 @@ public class PlayerDeathListener implements Listener {
 
             gamePlayerKiller.addKills(1);
             gamePlayerVictim.addDeaths(1);
-            //gamePlayerKiller.settempMVP(csplayerKiller.gettempMVP() + 1);
 
             // 设置玩家为旁观者模式并将其传送到击杀者附近
             victim.teleport(killer.getLocation().add(0, 2, 0));

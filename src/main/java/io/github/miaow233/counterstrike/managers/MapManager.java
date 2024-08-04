@@ -35,8 +35,12 @@ public class MapManager {
         return maps.get(name);
     }
 
-    public void selectMap(String name) {
+    public boolean selectMap(String name) {
+        if (!maps.containsKey(name)) {
+            return false;
+        }
         selectedMap = maps.get(name);
+        return true;
     }
 
     public MapConfig getSelectedMap() {

@@ -10,7 +10,13 @@ public enum Team {
         // 检查队伍是否存在，不存在则创建
         TeamManager teamManager = CounterStrike.instance.getTeamManager();
 
-        teamManager.createTeam("TERRORISTS", "T", "RED");
-        teamManager.createTeam("COUNTER_TERRORISTS", "CT", "BLUE");
+        if (!teamManager.hasTeam("TERRORISTS")) {
+            teamManager.createTeam("TERRORISTS", "T", "RED");
+        }
+        if (!teamManager.hasTeam("COUNTER_TERRORISTS")) {
+            teamManager.createTeam("COUNTER_TERRORISTS", "CT", "BLUE");
+        }
+
+
     }
 }

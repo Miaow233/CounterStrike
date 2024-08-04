@@ -1,9 +1,9 @@
 package io.github.miaow233.counterstrike.managers;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import io.github.miaow233.counterstrike.GameState;
 import io.github.miaow233.counterstrike.MapConfig;
 import io.github.miaow233.counterstrike.models.Team;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 public class GameManager {
@@ -50,15 +50,19 @@ public class GameManager {
             player.getInventory().clear();
         });
 
-
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud hostile COUNTER_TERRORISTS TERRORISTS");
-
         RoundManager.getInstance().startRounds();
     }
 
     public void endGame() {
+        if (CounterStrike.instance.getGameState() != GameState.IN_GAME) return;
+
+        plugin.getLogger().info("游戏结束，执行后续清理步骤");
         RoundManager.getInstance().stopRounds();
-        // Additional logic to end the game
+
+        // 移除所有玩家
+        PlayerManager.getInstance().getPlayers().forEach((player, gamePlayer) -> PlayerManager.getInstance().removePlayer(player));
+
+        CounterStrike.instance.setGameState(GameState.END);
     }
 }
 

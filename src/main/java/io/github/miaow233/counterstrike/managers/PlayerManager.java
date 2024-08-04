@@ -3,9 +3,11 @@ package io.github.miaow233.counterstrike.managers;
 import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.models.GamePlayer;
 import io.github.miaow233.counterstrike.models.Team;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,6 +48,20 @@ public class PlayerManager {
 
     public void removePlayer(Player player) {
         players.remove(player);
+
+        // 传送至主世界
+        player.teleport(plugin.getServer().getWorld("world").getSpawnLocation());
+
+        // 清除游戏物品
+        player.getInventory().clear();
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud countdown set %s 0 false".formatted(player.getName()));
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "team leave %s".formatted(player.getName()));
+        EconomyManager.getInstance().setCoins(player, 0);
+
+        if (players.isEmpty()) {
+            GameManager.getInstance().endGame();
+        }
     }
 
     public GamePlayer getGamePlayer(Player player) {
@@ -92,7 +108,7 @@ public class PlayerManager {
             gamePlayer.setKills(0);
             gamePlayer.setDeaths(0);
 
-            EconomyManager.getInstance().updatePlayerCoins(player, 0);
+            EconomyManager.getInstance().setCoins(player, 0);
         });
     }
 
@@ -106,5 +122,14 @@ public class PlayerManager {
                 player.sendMessage(message);
             }
         });
+    }
+
+    public Player getMvp() {
+        return players
+                .values()
+                .stream()
+                .max(Comparator.comparingInt(GamePlayer::getKills))
+                .map(GamePlayer::getPlayer)
+                .orElse(null);
     }
 }
