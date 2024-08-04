@@ -1,8 +1,11 @@
 package io.github.miaow233.counterstrike.commands;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import io.github.miaow233.counterstrike.GameState;
 import io.github.miaow233.counterstrike.managers.EconomyManager;
 import io.github.miaow233.counterstrike.managers.PlayerManager;
+import io.github.miaow233.counterstrike.managers.RoundManager;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -23,16 +26,20 @@ public class JoinCommand implements CommandExecutor {
             return false;
         }
 
+        if (PlayerManager.getInstance().getGamePlayer(player) != null) {
+            player.sendMessage(ChatColor.RED + "你已经在游戏中了");
+            return true;
+        }
 
         PlayerManager.getInstance().addPlayer(player);
-        player.sendMessage("You joined the game!");
+        player.sendMessage(ChatColor.GOLD + "你加入了游戏");
 
-        EconomyManager.getInstance().updatePlayerCoins(player, 0);
+        // 中途加入
+        if (plugin.getGameState() == GameState.IN_GAME) {
+            RoundManager.getInstance().respawnPlayer(player);
+        }
 
-        // 如果房间已满，则开始游戏
-        //if (GameManager.getInstance().isFull()){
-        //    GameManager.getInstance().startGame();
-        //}
+        EconomyManager.getInstance().setCoins(player, 0);
 
         return true;
     }

@@ -28,7 +28,7 @@ public class CoinCommand implements CommandExecutor {
         Player target = Bukkit.getPlayer(playerName);
 
         if (action.equalsIgnoreCase("clear")) {
-            EconomyManager.getInstance().updatePlayerCoins(target, 0);
+            EconomyManager.getInstance().setCoins(target, 0);
             return true;
         }
 
