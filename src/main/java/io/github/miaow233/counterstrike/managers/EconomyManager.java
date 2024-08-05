@@ -1,9 +1,8 @@
 package io.github.miaow233.counterstrike.managers;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import io.github.miaow233.counterstrike.utils.CommandUtils;
 import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -14,6 +13,8 @@ public class EconomyManager {
 
     private static EconomyManager instance;
     private final CounterStrike plugin;
+
+    private final String SCOREBOARD_COIN_KEY = "csmc.coins";
     private final Map<Player, Integer> playerCoins;
 
     Economy vaultEconomy;
@@ -51,23 +52,15 @@ public class EconomyManager {
 
     public void addCoins(Player player, int amount) {
         int currentCoins = playerCoins.getOrDefault(player, 0);
-        EconomyResponse response = vaultEconomy.depositPlayer(player, amount);
-        if (!response.transactionSuccess()) {
-            player.sendMessage("§cFailed to add coins. Reason: " + response.errorMessage);
-            return;
-        }
         int newAmount = currentCoins + amount;
+        DataManager.setScore(player.getName(), SCOREBOARD_COIN_KEY, newAmount);
         updatePlayerCoins(player, newAmount);
     }
 
     public void removeCoins(Player player, int amount) {
         int currentCoins = playerCoins.getOrDefault(player, 0);
-        EconomyResponse response = vaultEconomy.withdrawPlayer(player, amount);
-        if (!response.transactionSuccess()) {
-            player.sendMessage("§cFailed to remove coins. Reason: " + response.errorMessage);
-            return;
-        }
         int newAmount = currentCoins - amount;
+        DataManager.setScore(player.getName(), SCOREBOARD_COIN_KEY, newAmount);
         updatePlayerCoins(player, newAmount);
     }
 
@@ -86,6 +79,6 @@ public class EconomyManager {
 
     public void updatePlayerCoins(Player player, int newAmount) {
         playerCoins.put(player, newAmount);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud coin set %s %d".formatted(player.getName(), newAmount));
+        CommandUtils.runCommandAsConsole("lrhud coin set %s %d".formatted(player.getName(), newAmount));
     }
 }

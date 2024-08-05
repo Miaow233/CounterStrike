@@ -4,7 +4,7 @@ import io.github.miaow233.counterstrike.commands.CounterStrikeCommand;
 import io.github.miaow233.counterstrike.listeners.PlayerDeathListener;
 import io.github.miaow233.counterstrike.listeners.PlayerListener;
 import io.github.miaow233.counterstrike.managers.*;
-import org.bukkit.Bukkit;
+import io.github.miaow233.counterstrike.utils.CommandUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.dependency.Dependency;
 import org.bukkit.scoreboard.Objective;
@@ -64,7 +64,7 @@ public final class CounterStrike extends JavaPlugin {
         }
 
         this.mapManager = new MapManager(dataFolder);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud hostile set COUNTER_TERRORISTS TERRORISTS");
+        CommandUtils.runCommandAsConsole("lrhud hostile set COUNTER_TERRORISTS TERRORISTS");
     }
 
     public MapManager getMapManager() {

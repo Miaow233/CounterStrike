@@ -41,10 +41,10 @@ public class GameManager {
         PlayerManager.getInstance().getPlayers().forEach((player, gamePlayer) -> {
             if (gamePlayer.getTeam() == Team.TERRORISTS) {
                 player.teleport(tSpawn);
-                plugin.getLogger().info("已将 " + player.getName() + " 传送至terrorists 队伍");
+                plugin.getLogger().info("已将 " + player.getName() + " 传送至 terrorists 队伍");
             } else {
                 player.teleport(ctSpawn);
-                plugin.getLogger().info("已将 " + player.getName() + " 传送至counter-terrorists 队伍");
+                plugin.getLogger().info("已将 " + player.getName() + " 传送至 counter-terrorists 队伍");
             }
 
             player.getInventory().clear();

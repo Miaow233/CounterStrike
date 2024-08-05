@@ -4,20 +4,25 @@ package io.github.miaow233.counterstrike.listeners;
 import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.GameState;
 import io.github.miaow233.counterstrike.managers.PlayerManager;
-import org.bukkit.Bukkit;
+import io.github.miaow233.counterstrike.models.GamePlayer;
+import io.github.miaow233.counterstrike.models.Team;
+import io.github.miaow233.counterstrike.utils.CommandUtils;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
+
+import java.util.Date;
 
 public class PlayerListener implements Listener {
 
     private final CounterStrike plugin;
+    private Date lastMoveCheck = new Date();
 
     public PlayerListener(CounterStrike plugin) {
         this.plugin = plugin;
@@ -33,7 +38,7 @@ public class PlayerListener implements Listener {
 
         // 清除玩家队伍
         Player player = event.getPlayer();
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "team leave " + player.getName());
+        CommandUtils.runCommandAsConsole("team leave " + player.getName());
 
         //
         player.setGameMode(GameMode.ADVENTURE);
@@ -83,5 +88,65 @@ public class PlayerListener implements Listener {
         // 如果玩家没有进行游戏
         if (PlayerManager.getInstance().getGamePlayer(player) == null) return;
         event.setCancelled(true);
+    }
+
+    // 阻止玩家购买物品
+    @EventHandler
+    public void onPlayerOpenShop(PlayerCommandPreprocessEvent event) {
+        Player player = event.getPlayer();
+        if (event.getMessage().equalsIgnoreCase("/csmc shop")) {
+            // 如果玩家没有进行游戏
+            // 在游戏外为打开背包
+            if (PlayerManager.getInstance().getGamePlayer(player) == null) {
+                event.setMessage("/dm open swm_home");
+                return;
+            }
+
+            // 如果在商店状态，则可以正常购买
+            if (plugin.getGameState() == GameState.SHOP) {
+                event.setMessage("/dm open demomenu");
+                return;
+            }
+
+            // 阻止玩家打开商店
+            event.setCancelled(true);
+        }
+    }
+
+    // 禁止玩家移动
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        // 防抖
+        if (new Date().getTime() - lastMoveCheck.getTime() < 500) return;
+        lastMoveCheck = new Date();
+
+        Player player = event.getPlayer();
+        // 如果玩家没有进行游戏
+        GamePlayer gamePlayer = PlayerManager.getInstance().getGamePlayer(player);
+        if (gamePlayer == null) return;
+        // 如果在商店状态
+        if (plugin.getGameState() == GameState.SHOP) {
+            Location spawnLocation;
+            if (gamePlayer.getTeam() == Team.TERRORISTS) {
+                spawnLocation = plugin.getMapManager().getSelectedMap().getTSpawn();
+            } else {
+                spawnLocation = plugin.getMapManager().getSelectedMap().getCTSpawn();
+            }
+            Location playerLocation = event.getTo();
+            spawnLocation.setYaw(playerLocation.getYaw());
+            spawnLocation.setPitch(playerLocation.getPitch());
+            player.teleport(spawnLocation);
+            //event.setCancelled(true);
+        }
+    }
+
+    // 禁止玩家破坏
+    @EventHandler
+    public void onPlayerDestroyBlock(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+
+        if (player.hasPermission("csmc.destroy")) {
+            event.setCancelled(true);
+        }
     }
 }

@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 public class CoinCommand implements CommandExecutor {
 
     public CoinCommand(CounterStrike plugin) {
-
     }
 
     @Override
@@ -38,6 +37,7 @@ public class CoinCommand implements CommandExecutor {
                 EconomyManager.getInstance().addCoins(target, amount);
                 return true;
             case "remove":
+            case "rm":
                 EconomyManager.getInstance().removeCoins(target, amount);
                 return true;
             default:

@@ -95,6 +95,11 @@ public class CounterStrikeCommand implements CommandExecutor {
 
         // <prefix> exit
         if (action.equalsIgnoreCase("exit")) {
+            if (PlayerManager.getInstance().getGamePlayer(player) == null) {
+                sender.sendMessage("你没有加入任何对局");
+                return true;
+            }
+            
             player.sendMessage("退出游戏");
             PlayerManager.getInstance().removePlayer(player);
             return true;

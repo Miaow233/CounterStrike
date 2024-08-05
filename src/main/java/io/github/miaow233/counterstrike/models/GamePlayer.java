@@ -1,9 +1,9 @@
 package io.github.miaow233.counterstrike.models;
 
 import io.github.miaow233.counterstrike.CounterStrike;
+import io.github.miaow233.counterstrike.managers.DataManager;
 import io.github.miaow233.counterstrike.managers.EconomyManager;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Scoreboard;
 
 public class GamePlayer {
@@ -15,6 +15,7 @@ public class GamePlayer {
     Scoreboard scoreboard;
     private Team team;
     private int mvp;
+    private int currentRoundKills;
 
     public GamePlayer(Player player) {
         this.player = player;
@@ -22,17 +23,10 @@ public class GamePlayer {
         this.kills = 0;
         this.deaths = 0;
         this.mvp = 0;
+        this.currentRoundKills = 0;
         this.team = null; // 玩家初始时没有阵营
-        // 创建计分板
+
         scoreboard = player.getScoreboard();
-        try {
-            scoreboard.registerNewObjective("csmc.kills", Criteria.DUMMY, "kills");
-            scoreboard.registerNewObjective("csmc.deaths", Criteria.DUMMY, "deaths");
-            scoreboard.registerNewObjective("csmc.mvp", Criteria.DUMMY, "mvp");
-            scoreboard.registerNewObjective("csmc.teamWins", Criteria.DUMMY, "teamWins");
-        } catch (Exception e) {
-            CounterStrike.instance.getLogger().warning("计分板创建失败: " + e.getMessage());
-        }
     }
 
     public Player getPlayer() {
@@ -68,22 +62,23 @@ public class GamePlayer {
     }
     public void setKills(int kills) {
         this.kills = kills;
-        scoreboard.getObjective("csmc.kills").getScore(player.getName()).setScore(kills);
+        DataManager.setScore(player.getName(), "csmc.kills", kills);
+
     }
     public void addKills(int kills) {
         this.kills += kills;
-        scoreboard.getObjective("csmc.kills").getScore(player.getName()).setScore(this.kills);
+        DataManager.setScore(player.getName(), "csmc.kills", this.kills);
     }
     public int getDeaths() {
         return deaths;
     }
     public void setDeaths(int deaths) {
         this.deaths = deaths;
-        scoreboard.getObjective("csmc.deaths").getScore(player.getName()).setScore(deaths);
+        DataManager.setScore(player.getName(), "csmc.deaths", deaths);
     }
     public void addDeaths(int deaths) {
         this.deaths += deaths;
-        scoreboard.getObjective("csmc.deaths").getScore(player.getName()).setScore(this.deaths);
+        DataManager.setScore(player.getName(), "csmc.deaths", this.deaths);
     }
 
     public int getMvp() {
@@ -92,11 +87,34 @@ public class GamePlayer {
 
     public void setMvp(int mvp) {
         this.mvp = mvp;
-        scoreboard.getObjective("csmc.mvp").getScore(player.getName()).setScore(mvp);
+        DataManager.setScore(player.getName(), "csmc.mvp", mvp);
     }
 
     public void addMvp(int mvp) {
         this.mvp += mvp;
-        scoreboard.getObjective("csmc.mvp").getScore(player.getName()).setScore(this.mvp);
+        DataManager.setScore(player.getName(), "csmc.mvp", this.mvp);
+    }
+
+    public void reset() {
+        this.coins = 0;
+        this.kills = 0;
+        this.deaths = 0;
+        this.mvp = 0;
+
+        DataManager.setScore(player.getName(), "csmc.kills", this.kills);
+        DataManager.setScore(player.getName(), "csmc.deaths", this.deaths);
+        DataManager.setScore(player.getName(), "csmc.mvp", this.mvp);
+    }
+
+    public int getCurrentRoundKills() {
+        return currentRoundKills;
+    }
+
+    public void setCurrentRoundKills(int currentRoundKills) {
+        this.currentRoundKills = currentRoundKills;
+    }
+
+    public void addCurrentRoundKills(int currentRoundKills) {
+        this.currentRoundKills += currentRoundKills;
     }
 }

@@ -3,9 +3,11 @@ package io.github.miaow233.counterstrike.managers;
 import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.models.GamePlayer;
 import io.github.miaow233.counterstrike.models.Team;
-import org.bukkit.Bukkit;
+import io.github.miaow233.counterstrike.utils.CommandUtils;
 import org.bukkit.GameMode;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -47,7 +49,6 @@ public class PlayerManager {
     }
 
     public void removePlayer(Player player) {
-        players.remove(player);
 
         // 传送至主世界
         player.teleport(plugin.getServer().getWorld("world").getSpawnLocation());
@@ -55,9 +56,19 @@ public class PlayerManager {
         // 清除游戏物品
         player.getInventory().clear();
 
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud countdown set %s 0 false".formatted(player.getName()));
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "team leave %s".formatted(player.getName()));
+        // 清除药水效果
+        player.removePotionEffect(PotionEffectType.SPEED);
+        player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+        player.setGameMode(GameMode.ADVENTURE);
+
+        CommandUtils.runCommandAsConsole("lrhud countdown set %s 0 false".formatted(player.getName()));
+        CommandUtils.runCommandAsConsole("team leave %s".formatted(player.getName()));
         EconomyManager.getInstance().setCoins(player, 0);
+
+        GamePlayer gamePlayer = players.get(player);
+        if (gamePlayer == null) return;
+        gamePlayer.reset();
+        players.remove(player);
 
         if (players.isEmpty()) {
             GameManager.getInstance().endGame();
@@ -94,7 +105,6 @@ public class PlayerManager {
     }
 
     public int getAliveCount(Team team) {
-
         int getAliveCount = (int) players.values().stream()
                 .filter(p -> p.getTeam() == team)
                 .filter(p -> p.getPlayer().getGameMode() != GameMode.SPECTATOR)
@@ -103,32 +113,11 @@ public class PlayerManager {
         return getAliveCount;
     }
 
-    public void resetPlayerStats() {
-        players.forEach((player, gamePlayer) -> {
-            gamePlayer.setKills(0);
-            gamePlayer.setDeaths(0);
-
-            EconomyManager.getInstance().setCoins(player, 0);
-        });
-    }
-
-    public void boardcast(String message) {
-        players.forEach((player, gamePlayer) -> player.sendMessage(message));
-    }
-
-    public void boardcast(String message, Team team) {
-        players.forEach((player, gamePlayer) -> {
-            if (gamePlayer.getTeam() == team) {
-                player.sendMessage(message);
-            }
-        });
-    }
-
     public Player getMvp() {
         return players
                 .values()
                 .stream()
-                .max(Comparator.comparingInt(GamePlayer::getKills))
+                .max(Comparator.comparingInt(GamePlayer::getCurrentRoundKills))
                 .map(GamePlayer::getPlayer)
                 .orElse(null);
     }

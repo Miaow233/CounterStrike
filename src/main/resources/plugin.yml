@@ -3,17 +3,33 @@ version: '1.0-SNAPSHOT'
 main: io.github.miaow233.counterstrike.CounterStrike
 api-version: '1.20'
 load: POSTWORLD
+depend: [ 'Vault' ]
+softdepend: [ 'Vault' ]
 commands:
   'csmc coin':
     permission: csmc.admin
   'csmc map':
     permission: csmc.admin
-  'csmc join':
-    permission: csmc.join
+  'csmc start':
+    permission: csmc.admin
   'csmc end':
-    permission: csmc.leave
+    permission: csmc.admin
+  'csmc join':
+    permission: csmc.play
+  'csmc exit':
+    permission: csmc.play
   'csmc':
     usage: '/csmc'
     aliases:
       - 'cs'
     permission: csmc
+permissions:
+  csmc.admin:
+    description: 'Admin permission'
+    default: op
+  csmc.play:
+    description: 'Play permission'
+    default: true
+  csmc:
+    description: 'Csmc permission'
+    default: true

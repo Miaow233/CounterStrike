@@ -4,12 +4,14 @@ import io.github.miaow233.counterstrike.CounterStrike;
 import io.github.miaow233.counterstrike.GameState;
 import io.github.miaow233.counterstrike.models.GamePlayer;
 import io.github.miaow233.counterstrike.models.Team;
+import io.github.miaow233.counterstrike.utils.CommandUtils;
 import io.github.miaow233.counterstrike.utils.PacketUtils;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -24,7 +26,6 @@ public class RoundManager {
     private final int rounds;
     private int currentRound;
     private BukkitRunnable roundTask;
-
     private int timerId;
 
     private RoundManager(CounterStrike plugin, int roundTime, int rounds) {
@@ -61,18 +62,23 @@ public class RoundManager {
 
         for (Player player : PlayerManager.getInstance().getPlayers().keySet()) {
             respawnPlayer(player);
-            EconomyManager.getInstance().addCoins(player, 500);
+            EconomyManager.getInstance().addCoins(player, 800);
         }
 
         PacketUtils.sendTitleAndSubtitleToInGame("第 %s %s回合".formatted(ChatColor.RED.toString() + currentRound, ChatColor.RESET), "", 1, 3, 1);
         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             PacketUtils.sendTitleAndSubtitleToInGame("你有" + ChatColor.YELLOW + "20" + ChatColor.RESET + "秒时间来购买物资", "", 1, 3, 0);
-        }, 5 * 20L);
+        }, 3 * 20L);
 
 
-        plugin.setGameState(GameState.SHOP);
+        // 延迟1秒进入商店状态，保证玩家完全加载地图
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            plugin.setGameState(GameState.SHOP);
+        }, 20L);
 
-        plugin.setGameState(GameState.IN_GAME);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            plugin.setGameState(GameState.IN_GAME);
+        }, 20 * 20L);
 
         startTimer();
 
@@ -94,17 +100,18 @@ public class RoundManager {
         // 计时器每秒减一
         timerId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
             boolean blink = remainTime.get() <= 30;
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("lrhud countdown set @a %d %s", remainTime.getAndDecrement(), blink));
+            CommandUtils.runCommandAsConsole(String.format("lrhud countdown set @a %d %s", remainTime.getAndDecrement(), blink));
         }, 0, 20L);
     }
 
     public void endRound(boolean clearLastTimer) {
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud countdown set @a 0 true");
+        CommandUtils.runCommandAsConsole("lrhud countdown set @a 0 true");
         Bukkit.getScheduler().cancelTask(timerId);
 
         Player mvpPlayer = PlayerManager.getInstance().getMvp();
         if (mvpPlayer != null) {
             PacketUtils.sendTitleAndSubtitleToInGame("MVP", mvpPlayer.getName(), 0, 3, 0);
+            PlayerManager.getInstance().getGamePlayer(mvpPlayer).addMvp(1);
         }
 
         Bukkit.broadcastMessage(String.format("第 %d 回合结束，5秒后开始下一回合", currentRound));
@@ -133,18 +140,6 @@ public class RoundManager {
         player.teleport(location);
         player.setInvulnerable(true);
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.setInvulnerable(false), 5 * 20L); // 5秒无敌时间
-
-        ItemStack boots = new ItemStack(Material.NETHERITE_BOOTS);
-        boots.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        player.getInventory().setBoots(boots);
-
-        ItemStack leggings = new ItemStack(Material.NETHERITE_LEGGINGS);
-        leggings.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        player.getInventory().setLeggings(leggings);
-
-        ItemStack chestplate = new ItemStack(Material.NETHERITE_CHESTPLATE);
-        chestplate.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        player.getInventory().setChestplate(chestplate);
     }
 
     public void stopRounds() {
@@ -158,7 +153,7 @@ public class RoundManager {
         }
 
         Bukkit.getScheduler().cancelTask(timerId);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lrhud countdown set @a 0 false");
+        CommandUtils.runCommandAsConsole("lrhud countdown set @a 0 false");
 
         if (instance != null && roundTask != null && !roundTask.isCancelled()) {
             roundTask.cancel();
@@ -166,3 +161,4 @@ public class RoundManager {
         }
     }
 }
+
