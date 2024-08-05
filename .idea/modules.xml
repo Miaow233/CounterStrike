@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/CounterStrike.main.iml" filepath="$PROJECT_DIR$/.idea/modules/CounterStrike.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/CounterStrike.test.iml" filepath="$PROJECT_DIR$/.idea/modules/CounterStrike.test.iml" />
     </modules>
   </component>
 </project>
